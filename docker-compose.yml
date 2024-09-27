@@ -34,8 +34,7 @@ services:
     environment:
       PMA_HOST: andrei_datab
       PMA_PORT: 3306
-      PMA_USER: andrei
-      PMA_PASSWORD: password
+      PMA_AUTH_TYPE: 'cookie'  #Always prompt password
     ports:
       - "82:80"
     networks:
