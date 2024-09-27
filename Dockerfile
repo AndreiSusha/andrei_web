@@ -1,11 +1,17 @@
-FROM php:8.2-fpm-alpine3.19
+# Using the image that comes with Apache and PHP pre-configured
+FROM php:8.2-apache
 
-RUN docker-php-ext-install mysqli pdo pdo_mysql
+# Execute 2 commands in a single RUN to reduce layers
+RUN \
+    set -eux; \
+    \
+    docker-php-ext-install mysqli pdo pdo_mysql
 
-RUN apk add --no-cache apache2 apache2-utils
+COPY ./apache.conf /etc/apache2/sites-available/000-default.conf
 
-COPY ./apache.conf /etc/apache2/conf.d/
-
+# Expose port 80 for HTTP traffic
 EXPOSE 80
 
-CMD ["httpd", "-D", "FOREGROUND"]
+# Ensuring the container can respond to HTTP requests, marking it unhealthy otherwise
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost/ || exit 1

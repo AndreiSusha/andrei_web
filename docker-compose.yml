@@ -4,9 +4,11 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - ./public:/var/www/html
+      - ./public:/var/www/html  #Mount the 'public' directory on the host to '/var/www/html' in the container
     ports:
-      - "81:80"
+      - "81:80"  #Map port 81 on the host to HTTP port 80 in the container
+    networks:
+      - dev_network
 
   andrei_datab:
     image: mysql:8.0
@@ -16,9 +18,16 @@ services:
       MYSQL_USER: andrei
       MYSQL_PASSWORD: password
     volumes:
-      - db_data:/var/lib/mysql
+      - db_data:/var/lib/mysql  #Use a named volume for persistent storage of MySQL data
     ports:
-      - "3309:3306"
+      - "3309:3306" #Map port 3309 on the host to port 3306 in the container
+    networks:
+      - dev_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]  #Healthcheck command to ensure MySQL is running
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   andrei_phpmyadmin:
     image: phpmyadmin/phpmyadmin
@@ -29,6 +38,13 @@ services:
       PMA_PASSWORD: password
     ports:
       - "82:80"
+    networks:
+      - dev_network
+    depends_on:
+      - andrei_datab  #Ensure 'andrei_datab' service is started before phpmyadmin
 
 volumes:
-  db_data:
+  db_data:  #Define a named volume for persistent storage of MySQL data
+
+networks:
+  dev_network:  #Define a custom network for the services
